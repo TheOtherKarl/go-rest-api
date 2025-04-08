@@ -4,11 +4,14 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	_ "github.com/lib/pq" // postgres
 	"log"
 	"net/http"
 	"os"
 	"rest-api/config"
+	"rest-api/middleware"
+
+	"github.com/justinas/alice"
+	_ "github.com/lib/pq" // postgres
 )
 
 type post struct {
@@ -35,7 +38,8 @@ func main() {
 	})
 
 	log.Printf("Server now running on port: %v", os.Getenv("PORT"))
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%v", config.PORT), mux))
+    chain := alice.New(middleware.LogHttpRequest).Then(mux)
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%v", config.PORT), chain))
 }
 
 func handleGet(w http.ResponseWriter, r *http.Request, db *sql.DB) {
